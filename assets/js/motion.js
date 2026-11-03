@@ -1,0 +1,11 @@
+(()=>{
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const run=(el,frames,options={})=>{if(!el||reduce.matches||!el.animate)return;el.getAnimations().forEach(a=>a.cancel());return el.animate(frames,{duration:420,easing:'cubic-bezier(.22,1,.36,1)',...options})};
+// Native controls remain usable throughout transitions.
+const pages=['calendar','history','savings','settings'];let active=document.querySelector('nav button.active')?.dataset.page||'calendar';
+document.querySelectorAll('nav [data-page]').forEach(b=>b.addEventListener('click',()=>{let target=b.dataset.page;if(target===active)return;let direction=pages.indexOf(target)>pages.indexOf(active)?1:-1;active=target;run(document.getElementById(target),[{opacity:0,transform:`translateX(${direction*22}px)`},{opacity:1,transform:'translateX(0)'}]);run(document.querySelector('h1'),[{opacity:.2,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:300});}));
+for(const id of ['prev','next','today'])document.getElementById(id)?.addEventListener('click',()=>{const direction=id==='prev'?-1:1;run(document.getElementById('grid'),[{opacity:0,transform:`translateX(${direction*18}px)`},{opacity:1,transform:'translateX(0)'}],{duration:380});run(document.getElementById('month'),[{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:300});});
+if('IntersectionObserver' in window&&!reduce.matches){const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('revealed');observer.unobserve(e.target)}}),{threshold:.08});document.querySelectorAll('.stats .card,.layout>.card,.side>.card').forEach((el,i)=>{el.classList.add('reveal-pending');el.style.transitionDelay=Math.min(i*45,180)+'ms';observer.observe(el)})}
+document.addEventListener('pointerdown',e=>{if(reduce.matches)return;const b=e.target.closest('button');if(!b||b.disabled)return;const box=b.getBoundingClientRect(),wave=document.createElement('span');wave.className='tap-wave';wave.style.left=(e.clientX-box.left)+'px';wave.style.top=(e.clientY-box.top)+'px';b.append(wave);setTimeout(()=>wave.remove(),650)});
+reduce.addEventListener('change',()=>{if(reduce.matches){document.querySelectorAll('.reveal-pending').forEach(e=>e.classList.add('revealed'));document.getAnimations().forEach(a=>a.cancel())}});
+})();
